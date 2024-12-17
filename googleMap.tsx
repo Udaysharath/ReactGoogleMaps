@@ -5,8 +5,6 @@ we need to make this component client rendered as well*/
 //Map component Component from library
 import { GoogleMap, InfoWindowF, MarkerF } from "@react-google-maps/api";
 import React, { useCallback, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { mapAddress } from "../store/actions/chatAction";
 import { NextImage } from "../components/General/Next13";
 import { useDebounce } from "../helper/debounce";
 import { addressSearch, reverseGeocoding } from "../services/chat.service";
@@ -15,7 +13,6 @@ import { addressSearch, reverseGeocoding } from "../services/chat.service";
 const defaultMapContainerStyle = {
   width: "100%",
   height: "300px",
-  // borderRadius: '15px 0px 0px 15px',
 };
 
 //Default zoom level, can be adjusted
@@ -30,7 +27,7 @@ const defaultMapOptions = {
   fullscreenControl: false,
 };
 
-const MapComponent = ({ setLocationAllowed, locationAllowed }: any) => {
+const MapComponent = ({ setLocationAllowed, locationAllowed, setMapAddress }: any) => {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedValue = useDebounce(searchQuery, 500);
   const [filteredContacts, setFilteredContacts] = useState([]);
@@ -43,18 +40,15 @@ const MapComponent = ({ setLocationAllowed, locationAllowed }: any) => {
     lng: 0,
   });
   const [infoWindowContent, setInfoWindowContent] = useState("");
-  const dispatch = useDispatch();
 
   const getGeocodingData = async (lat: any, lng: any) => {
     try {
       const reverseGeocodingData = await reverseGeocoding(lat, lng);
-      // console.log("backend", reverseGeocodingData.data[0]);
       const address =
         reverseGeocodingData.data[0]?.formatted_address || "Address not found";
-      dispatch(mapAddress(reverseGeocodingData.data[0]));
+      setMapAddress(reverseGeocodingData.data[0]);
       return address;
     } catch (error) {
-      // console.error("Error fetching address:", error);
       return "Error fetching address";
     }
   };
@@ -63,7 +57,6 @@ const MapComponent = ({ setLocationAllowed, locationAllowed }: any) => {
     const lng = event.latLng.lng();
     setMarkerPosition({ lat, lng });
     setInfoWindowPosition({ lat, lng });
-    // console.log(`Pin dropped at: ${lat}, ${lng}`);
     const address = await getGeocodingData(lat, lng);
     setInfoWindowContent(address);
   }, []);
@@ -79,17 +72,11 @@ const MapComponent = ({ setLocationAllowed, locationAllowed }: any) => {
           setInfoWindowContent(address);
         },
         (error) => {
-          // console.error("Error getting geolocation", error);
-          // Set a default location if geolocation fails
-          //   setMarkerPosition(defaultMapCenter);
-          //   setMapCenter(defaultMapCenter);
+          console.error("Error getting geolocation", error);
         },
       );
     } else {
-      // console.error("Geolocation is not supported by this browser.");
-      // Set a default location if geolocation is not supported
-      //   setMarkerPosition(defaultMapCenter);
-      //   setMapCenter(defaultMapCenter);
+      console.error("Geolocation is not supported by this browser.");
     }
   };
   const handleChange = (event: any) => {
@@ -112,9 +99,8 @@ const MapComponent = ({ setLocationAllowed, locationAllowed }: any) => {
       }
     }
   };
-  // console.log("filteredContacts", filteredContacts);
+
   const searchClick = async (contact: any) => {
-    // console.log("contact", contact?.geometry?.location);
     setMarkerPosition({
       lat: contact?.geometry?.location?.lat,
       lng: contact?.geometry?.location?.lng,
@@ -162,7 +148,6 @@ const MapComponent = ({ setLocationAllowed, locationAllowed }: any) => {
         setLocationAllowed(true);
       },
       (error) => {
-        // console.error("Error accessing location:", error);
         setLocationAllowed(false);
       },
     );
@@ -170,9 +155,9 @@ const MapComponent = ({ setLocationAllowed, locationAllowed }: any) => {
 
   const promptUserToAllowLocation = () => {
     if (!Boolean(locationAllowed)) {
-      // alert(
-      //   "Location access is denied. Please enable location permissions in your browser settings.",
-      // );
+      alert(
+        "Location access is denied. Please enable location permissions in your browser settings.",
+      );
     }
   };
 

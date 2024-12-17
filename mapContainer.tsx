@@ -1,37 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { MapProvider } from "./mapProvider";
-import MapComponent from "../../pages/googleMap";
-import { useDispatch, useSelector } from "react-redux";
-import { updateIndex } from "../../store/actions/indexAction";
+import MapComponent from "./googleMap";
+import { useSelector } from "react-redux";
 import { NextImage } from "../General/Next13";
-import { getServiceabilityOH } from "../../services/orangeHealth.service";
-import { formatDateToYYYYMMDD } from "../../helper/helperMethods";
 
 interface MapContainerProps {
   showHeaderTitle?: boolean; // Prop to control whether to show the header title or not
 }
 
-const MapContainer: React.FC<MapContainerProps> = ({
-  showHeaderTitle = true,
-}) => {
-  const dispatch = useDispatch();
-  const [serviceableMessage, setServiceableMessage] = useState<any>("");
+const MapContainer: React.FC<MapContainerProps> = ({}) => {
   const [locationAllowed, setLocationAllowed] = useState(false);
-  const mapAddress =
-    useSelector((state: any) => state.dashboardReducer).mapAddress || [];
-  const lat = mapAddress?.geometry?.location?.lat;
-  const lng = mapAddress?.geometry?.location?.lng;
-  const date = formatDateToYYYYMMDD(new Date());
-  const serviceable = async () => {
-    try {
-      const res = await getServiceabilityOH(lat, lng, date);
-      setServiceableMessage(res?.data?.status);
-    } catch (error) {}
-  };
+  const [mapAddress, setMapAddress] = useState();
 
-  useEffect(() => {
-    serviceable();
-  }, [lat, lng, date]);
 
   return (
     <>
@@ -41,6 +21,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
             <MapComponent
               setLocationAllowed={setLocationAllowed}
               locationAllowed={locationAllowed}
+              setMapAddress={setMapAddress}
             />
           </MapProvider>
         </div>
@@ -68,22 +49,11 @@ const MapContainer: React.FC<MapContainerProps> = ({
               )}
             </div>
           </div>
-          {serviceableMessage === "" ||
-            (!serviceableMessage && (
-              <span className="font-300 text-[#d53333] text-3xs ml-[10px]">
-                Location not serviceable!!
-              </span>
-            ))}
-          {serviceableMessage === "Location is serviceable" && (
-            <button
-              className={`mb-[15px] Mxm:w-full w-[80%] flex justify-center px-[20px] py-[10px] rounded-[8px] ${"cursor-pointer bg-[#0077cc] text-[#fff]"}`}
-              onClick={() => {
-                dispatch(updateIndex("completeAddress"));
-              }}
-            >
-              Enter complete Address
-            </button>
-          )}
+          <button
+            className={`mb-[15px] Mxm:w-full w-[80%] flex justify-center px-[20px] py-[10px] rounded-[8px] ${"cursor-pointer bg-[#0077cc] text-[#fff]"}`}
+          >
+            Enter complete Address
+          </button>
         </div>
       ) : (
         <div className="xm:ml-[100px] absolute z-20 bottom-[120px] Mxm:bottom-[120px] w-full bg-[#fff]">
